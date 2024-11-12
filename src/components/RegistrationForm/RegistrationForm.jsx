@@ -1,45 +1,41 @@
-import { useContacts } from '../../hooks';
 import { useDispatch } from 'react-redux';
 import { useFormik } from 'formik';
-
-import TextField from '@mui/material/TextField';
-import { ContactSchema } from '../../schemas/contactSchema';
-import { contactsOps } from '../../redux';
-
-import { Box, Button } from '@mui/material';
-import toast from 'react-hot-toast';
+import * as Yup from 'yup';
+import { authOps } from '../../redux';
+import { Box, Button, TextField } from '@mui/material';
 
 const initialValues = {
   name: '',
-  number: '',
+  email: '',
+  password: '',
 };
 
-const ContactForm = () => {
-  const { contacts } = useContacts();
+const registerUserSchema = Yup.object().shape({
+  name: Yup.string()
+    .matches(/^[a-zA-Z]{1}/, 'First symbol must be letter')
+    .min(3, 'Too Short!')
+    .max(50, 'Too Long!')
+    .required('Required'),
+  email: Yup.string().email().required('Required'),
+  password: Yup.string()
+    .matches(
+      /([a-zA-Z]\w+[0-9])/,
+      'The password must consist of numbers and letters'
+    )
+    .min(6, 'Too Short!')
+    .max(50, 'Too Long!')
+    .required('Required'),
+});
+
+const RegistrationForm = () => {
   const dispatch = useDispatch();
 
   const formik = useFormik({
     initialValues,
-    validationSchema: ContactSchema,
+    validationSchema: registerUserSchema,
     onSubmit: (values, { resetForm }) => {
-      const [name, number] = Object.values(values);
-      try {
-        contacts.some(contact => {
-          if (contact.name.toLowerCase() === name.toLowerCase()) {
-            throw new Error(`Name "${name}" is already used in contacts`);
-          }
-          if (contact.number === number) {
-            throw new Error(`Number ${number} is already saved in contacts`);
-          }
-        });
-
-        dispatch(contactsOps.addContact(values));
-        toast.success(`${values.name} was added to your contacts`);
-
-        resetForm();
-      } catch (error) {
-        toast.error(error.message);
-      }
+      dispatch(authOps.register(values));
+      resetForm();
     },
   });
 
@@ -69,14 +65,26 @@ const ContactForm = () => {
         <TextField
           variant="filled"
           fullWidth
-          id="number"
-          name="number"
-          label="Number"
-          value={formik.values.number}
+          id="email"
+          name="email"
+          label="Email"
+          value={formik.values.email}
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
-          error={formik.touched.number && Boolean(formik.errors.number)}
-          helperText={formik.touched.number && formik.errors.number}
+          error={formik.touched.email && Boolean(formik.errors.email)}
+          helperText={formik.touched.email && formik.errors.email}
+        />
+        <TextField
+          variant="filled"
+          fullWidth
+          id="password"
+          name="password"
+          label="Password"
+          value={formik.values.password}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          error={formik.touched.password && Boolean(formik.errors.password)}
+          helperText={formik.touched.password && formik.errors.password}
         />
         <Button
           variant="contained"
@@ -101,11 +109,11 @@ const ContactForm = () => {
             },
           })}
         >
-          Add contact
+          Register
         </Button>
       </form>
     </Box>
   );
 };
 
-export default ContactForm;
+export default RegistrationForm;

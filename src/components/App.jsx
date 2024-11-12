@@ -1,50 +1,71 @@
-import { useEffect } from 'react';
+import { Route, Routes } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import toast, { Toaster } from 'react-hot-toast';
-import ContactForm from './ContactForm/ContactForm';
-import SearchBox from './SearchBox/SearchBox';
-import ContactList from './ContactList/ContactList';
-import { useContacts } from '../hooks';
-import { contactsOps } from '../redux';
-import css from './App.module.css';
-import Loader from './Loader/Loader';
+import { useEffect, lazy } from 'react';
+import { RestrictedRoute } from './RestrictedRoute';
+import SharedLayout from './SharedLayout/SharedLayout';
+import { PrivateRoute } from './PrivateRoute';
+import { useAuth, useColorTheme } from '../hooks';
+import { authOps } from '../redux';
+
+import { CssBaseline, ThemeProvider, Typography } from '@mui/material';
+
+const HomePage = lazy(() => import('../pages/HomePage/HomePage'));
+const RegisterPage = lazy(() =>
+  import('../pages/RegistrationPage/RegistrationPage')
+);
+const LoginPage = lazy(() => import('../pages/LoginPage/LoginPage'));
+const ContactsPage = lazy(() => import('../pages/ContactsPage/ContactsPage'));
 
 const App = () => {
-  const { contacts, loading, error } = useContacts();
+  const { isRefreshing } = useAuth();
   const dispatch = useDispatch();
+  const { theme } = useColorTheme();
 
   useEffect(() => {
-    dispatch(contactsOps.fetchContacts());
+    dispatch(authOps.refreshUser());
   }, [dispatch]);
 
-  return (
-    <>
-      <div className={css.container}>
-        <h1 className={css.title}>Phonebook</h1>
-        {loading && <Loader />}
-        <ContactForm />
-        {contacts.length > 1 && <SearchBox />}
-        {contacts.length > 0 && <h2 className={css.subtitle}>Contacts</h2>}
-        {contacts.length === 0 && !loading && (
-          <p className={css.alterText}>
-            There are no contacts in your contact list
-          </p>
-        )}
-        <ContactList />
-        {error && toast.error(error)}
-        <Toaster
-          gutter={8}
-          toastOptions={{
-            duration: 4000,
-            position: 'bottom-center',
-            style: {
-              background: '#444444',
-              color: 'orange',
-            },
-          }}
-        />
-      </div>
-    </>
+  return isRefreshing ? (
+    <Typography
+      component="h3"
+      variant="h6"
+      sx={{ textAlign: 'center', pt: 3, color: 'primary.main' }}
+    >
+      Refreshing user...
+    </Typography>
+  ) : (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Routes>
+        <Route path="/" element={<SharedLayout />}>
+          <Route index element={<HomePage />} />
+          <Route
+            path="register"
+            element={
+              <RestrictedRoute
+                redirectTo="/contacts"
+                component={<RegisterPage />}
+              />
+            }
+          />
+          <Route
+            path="login"
+            element={
+              <RestrictedRoute
+                redirectTo="/contacts"
+                component={<LoginPage />}
+              />
+            }
+          />
+          <Route
+            path="contacts"
+            element={
+              <PrivateRoute redirectTo="/login" component={<ContactsPage />} />
+            }
+          />
+        </Route>
+      </Routes>
+    </ThemeProvider>
   );
 };
 
