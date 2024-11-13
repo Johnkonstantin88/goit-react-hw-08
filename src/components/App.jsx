@@ -1,8 +1,8 @@
 import { Route, Routes } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { useEffect, lazy } from 'react';
+import Layout from './Layout/Layout';
 import { RestrictedRoute } from './RestrictedRoute';
-import SharedLayout from './SharedLayout/SharedLayout';
 import { PrivateRoute } from './PrivateRoute';
 import { useAuth, useColorTheme } from '../hooks';
 import { authOps } from '../redux';
@@ -36,9 +36,9 @@ const App = () => {
   ) : (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Routes>
-        <Route path="/" element={<SharedLayout />}>
-          <Route index element={<HomePage />} />
+      <Layout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
           <Route
             path="register"
             element={
@@ -63,8 +63,8 @@ const App = () => {
               <PrivateRoute redirectTo="/login" component={<ContactsPage />} />
             }
           />
-        </Route>
-      </Routes>
+        </Routes>
+      </Layout>
     </ThemeProvider>
   );
 };

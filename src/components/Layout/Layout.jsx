@@ -1,19 +1,16 @@
-import { Outlet } from 'react-router-dom';
 import { Suspense } from 'react';
 import AppBar from '../AppBar/AppBar';
 import Container from '@mui/material/Container';
 
-const SharedLayout = () => {
+const Layout = ({ children }) => {
   return (
     <>
       <AppBar />
       <Container maxWidth="x1" align="center" sx={{ pt: 8 }}>
-        <Suspense fallback={null}>
-          <Outlet />
-        </Suspense>
+        <Suspense fallback={null}>{children}</Suspense>
       </Container>
     </>
   );
 };
 
-export default SharedLayout;
+export default Layout;
